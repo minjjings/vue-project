@@ -4,18 +4,25 @@ import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import NoticeModal from './NoticeModal.vue';
 import { useModalStore } from '../../../../stores/modalState';
+import Pagination from '../../../common/Pagination.vue';
 
 const route = useRoute();
 const noticeList = ref();
 const flag = ref(false);
 const modalState = useModalStore();
 const noticeId = ref(0);
+const cPage = ref(1);
+
+const onPostSuccess = () => {
+    modalState.setModalState();
+    searchList();
+};
 
 const searchList = () => {
     const param = new URLSearchParams({
         ...route.query,
         pageSize: 5,
-        currentPage: 1,
+        currentPage: cPage.value,
     });
 
     axios.post('/api/management/noticeListBody.do', param).then(res => {
@@ -41,9 +48,10 @@ watch(() => route.query, searchList);
         <NoticeModal
             v-if="modalState.modalState"
             :id="noticeId"
-            @modalClose="() => (noticeId = 0)"
+            @modalClose="noticeId = $event"
+            @postSuccess="onPostSuccess"
         />
-        현재 페이지: 총 개수:
+        현재 페이지: 총 개수: {{ noticeList?.noticeCnt }}
         <table>
             <colgroup>
                 <col width="10%" />
@@ -86,6 +94,13 @@ watch(() => route.query, searchList);
                 </tr> -->
             </tbody>
         </table>
+        <Pagination
+            :totalItems="noticeList?.noticeCnt"
+            :items-per-page="5"
+            :max-pages-shown="5"
+            :onClick="searchList"
+            v-model="cPage"
+        />
     </div>
 </template>
 

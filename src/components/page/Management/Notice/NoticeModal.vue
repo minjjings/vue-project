@@ -4,6 +4,7 @@ import { useModalStore } from '../../../../stores/modalState';
 import { onUnmounted } from 'vue';
 const modalState = useModalStore();
 const { id } = defineProps(['id']);
+// const emit = defineEmits(['modalClose'],)
 const noticeDetail = ref({});
 
 const searchDetail = () => {
@@ -13,7 +14,37 @@ const searchDetail = () => {
             noticeDetail.value = res.data.detailValue;
         });
 };
-const emit = defineEmits(['modalClose']);
+
+const noticeSave = () => {
+    const param = new URLSearchParams(noticeDetail.value);
+    axios.post('/api/management/noticeSave.do', param).then(res => {
+        if (res.data.result === 'success') {
+            emit('postSuccess');
+        }
+    });
+};
+
+const noticeUpdate = () => {
+    const param = new URLSearchParams(noticeDetail.value);
+    param.append('noticeId', id);
+    axios.post('/api/management/noticeUpdate.do', param).then(res => {
+        if (res.data.result === 'success') {
+            emit('postSuccess');
+        }
+    });
+};
+
+const noticeDelete = () => {
+    axios
+        .post('/api/management/noticeDeleteJson.do', { noticeId: id })
+        .then(res => {
+            if (res.data.result === 'success') {
+                emit('postSuccess');
+            }
+        });
+};
+
+const emit = defineEmits(['modalClose', 'postSuccess']);
 
 // 돔이 생성 되고 난 후에 실행
 onMounted(() => {
@@ -21,7 +52,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    emit('modalClose');
+    emit('modalClose', 0);
 });
 </script>
 <template>
@@ -47,8 +78,10 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <div class="button-box">
-                    <button>저장</button>
-                    <button>삭제</button>
+                    <button @click="id ? noticeUpdate() : noticeSave()">
+                        {{ id ? '수정' : '저장' }}
+                    </button>
+                    <button v-if="id" @click="noticeDelete()">삭제</button>
                     <button @click="modalState.setModalState()">나가기</button>
                 </div>
             </div>
