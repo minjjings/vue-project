@@ -1,16 +1,43 @@
+<!-- setup을 적어야 Composition API를 사용할 수 있다.  -->
+<script setup>
+import { onMounted, ref } from 'vue';
+import router from '@/router';
+import { useModalStore } from '../../../../stores/modalState';
+const searchTitle = ref('');
+const searchStDate = ref('');
+const searchEdDate = ref('');
+const modalState = useModalStore();
+const handlerSearch = () => {
+    const query = [];
+    !searchTitle.value || query.push(`searchTitle=${searchTitle.value}`);
+    !searchStDate.value || query.push(`searchStDate=${searchStDate.value}`);
+    !searchEdDate.value || query.push(`searchEdDate=${searchEdDate.value}`);
+    const queryString = query.length > 0 ? `?${query.join('&')}` : '';
+    console.log(queryString);
+
+    router.push(queryString);
+};
+
+//새로고침시 queryParam만 변경
+//1. NoticeSearch라는 컴포넌트가 열릴 때, url에 쿼리 파람이 남아 있는지 확인
+//2. 남아 있는 경우, 경로(queryPram을 제외)로 현재 url 대체
+onMounted(() => {
+    window.location.search && router.replace(window.location.pathname);
+});
+</script>
+
 <template>
     <div class="search-box">
         <!-- v-model을 이용하여 양방향 바인딩을 쉽게 할 수 있다. -->
-        <input />
-        <input type="date" />
-        <input type="date" />
+        <!-- lazy : focus가 해제되었을 때 model에 저장됨 -->
+        <input v-model.lazy="searchTitle" />
+        <input type="date" v-model="searchStDate" />
+        <input type="date" v-model="searchEdDate" />
         <!-- v-on:click="" 또는 @click=""으로 이벤트를 설정한다. -->
-        <button>검색</button>
-        <button>신규등록</button>
+        <button @click="handlerSearch">검색</button>
+        <button @click="modalState.setModalState()">신규등록</button>
     </div>
 </template>
-<!-- setup을 적어야 Composition API를 사용할 수 있다.  -->
-<script setup></script>
 
 <style lang="scss" scoped>
 .search-box {

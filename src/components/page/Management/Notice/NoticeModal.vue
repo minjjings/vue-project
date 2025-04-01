@@ -1,11 +1,40 @@
+<script setup>
+import axios from 'axios';
+import { useModalStore } from '../../../../stores/modalState';
+import { onUnmounted } from 'vue';
+const modalState = useModalStore();
+const { id } = defineProps(['id']);
+const noticeDetail = ref({});
+
+const searchDetail = () => {
+    axios
+        .post('/api/management/noticeDetailJson.do', { noticeId: id })
+        .then(res => {
+            noticeDetail.value = res.data.detailValue;
+        });
+};
+const emit = defineEmits(['modalClose']);
+
+// 돔이 생성 되고 난 후에 실행
+onMounted(() => {
+    id && searchDetail();
+});
+
+onUnmounted(() => {
+    emit('modalClose');
+});
+</script>
 <template>
+    <!-- teleport란? 원하는 곳으로 옮길 수 있음  -->
     <teleport to="body">
         <div class="backdrop">
             <div class="container">
-                <label> 제목 :<input type="text" /> </label>
+                <label>
+                    제목 :<input type="text" v-model="noticeDetail.title" />
+                </label>
                 <label>
                     내용 :
-                    <input type="text" />
+                    <input type="text" v-model="noticeDetail.content" />
                 </label>
                 파일 :<input type="file" style="display: none" id="fileInput" />
                 <label class="img-label" htmlFor="fileInput">
@@ -20,14 +49,12 @@
                 <div class="button-box">
                     <button>저장</button>
                     <button>삭제</button>
-                    <button>나가기</button>
+                    <button @click="modalState.setModalState()">나가기</button>
                 </div>
             </div>
         </div>
     </teleport>
 </template>
-
-<script setup></script>
 
 <style lang="scss" scoped>
 .backdrop {
